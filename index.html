@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="utf-8"><title>Os meus jogos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f4f4f7;--sf:#fff;--tx:#1b1b22;--mu:#6b6b78;--ac:#5b5bf0;--bd:#e0e0e8;--ok:#1f9d55;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121218;--sf:#1d1d27;--tx:#ececf2;--mu:#9a9aab;--ac:#8b8bff;--bd:#2d2d3b;--ok:#4cd488}}
+:root[data-theme="dark"]{--bg:#121218;--sf:#1d1d27;--tx:#ececf2;--mu:#9a9aab;--ac:#8b8bff;--bd:#2d2d3b;--ok:#4cd488}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+#app{max-width:980px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:0 0 10px}h2{font-size:16px;margin:22px 0 8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+.tab,button,select,input{font:inherit}
+.tab{border:1px solid var(--bd);background:var(--sf);color:var(--tx);padding:7px 12px;border-radius:99px;white-space:nowrap;cursor:pointer}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+input,select,textarea{background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px;min-width:0;font:inherit}
+button.b{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+button.g{background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center}
+.row>input[type=text]{flex:1;min-width:140px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:12px}
+.card{cursor:pointer}
+.cv{aspect-ratio:3/4;border-radius:10px;background:var(--sf);border:1px solid var(--bd);overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;color:var(--mu);font-weight:600;position:relative}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;right:6px;top:6px;background:#000b;color:#fff;border-radius:6px;padding:1px 6px;font-size:12px;z-index:1}
+.hs{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}.hs .card{width:110px;flex:none}
+.ct{font-size:13px;margin-top:4px;font-weight:600}.cs{font-size:12px;color:var(--mu)}
+.box{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.top{display:flex;gap:14px;flex-wrap:wrap}.top .cv{width:150px;flex:none;cursor:pointer}
+.fl{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.fl label{font-size:12px;color:var(--mu);display:flex;flex-direction:column;gap:3px}
+a.l{display:inline-block;border:1px solid var(--bd);border-radius:8px;padding:7px 11px;color:var(--ac);text-decoration:none;background:var(--sf)}
+.tr{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}
+.tr.d span.n{text-decoration:line-through;color:var(--mu)}.tr span.n{flex:1}
+.tg{font-size:11px;border:1px solid var(--bd);border-radius:6px;padding:0 5px;color:var(--mu)}
+.mu{color:var(--mu);font-size:13px}.x{background:none;border:0;color:var(--mu);cursor:pointer;font-size:18px}
+.bar{height:6px;background:var(--bd);border-radius:9px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--ok)}
+</style></head><body><div id="app"></div>
+<script>
+const PL=['PS1','PS2','PS3','PS4','PS5','PSP','Vita','NES','SNES','N64','GameCube','Wii','Wii U','Switch','Switch 2','Game Boy','GBC','GBA','DS','3DS','Master System','Mega Drive','Saturn','Dreamcast','Xbox','Xbox 360','Xbox One','Xbox Series','PC','Mobile','Arcade','Outra'],TP=['PS3','PS4','PS5','Vita','Xbox 360','Xbox One','Xbox Series','PC'];
+const LS={played:'Jogados',playing:'A jogar',want:'Quero jogar',wish:'Wishlist'};
+const TY={platina:'🏆 Platina',ouro:'🥇 Ouro',prata:'🥈 Prata',bronze:'🥉 Bronze'};
+let S={games:[],tab:'played',plat:'',view:'inicio',open:null,dlc:null},db=null,ref=null,assets=null,mode='local',tm;
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const U=()=>Math.random().toString(36).slice(2,9),q=encodeURIComponent;
+const game=()=>S.games.find(g=>g.id===S.open),cur=()=>{const g=game();return S.dlc?g.dlcs.find(d=>d.id===S.dlc):g};
+const cfg=()=>{try{return JSON.parse(localStorage.getItem('gt_cfg')||'{}')}catch(e){return {}}};
+const setCfg=o=>localStorage.setItem('gt_cfg',JSON.stringify({...cfg(),...o}));
+const PM={'PlayStation 5':'PS5','PlayStation 4':'PS4','PlayStation 3':'PS3','PlayStation 2':'PS2','PlayStation':'PS1','PSP':'PSP','PS Vita':'Vita','Nintendo Switch':'Switch','Nintendo Switch 2':'Switch 2','NES':'NES','SNES':'SNES','Nintendo 64':'N64','GameCube':'GameCube','Wii':'Wii','Wii U':'Wii U','Game Boy':'Game Boy','Game Boy Color':'GBC','Game Boy Advance':'GBA','Nintendo DS':'DS','Nintendo 3DS':'3DS','SEGA Master System':'Master System','SEGA Genesis':'Mega Drive','SEGA Saturn':'Saturn','Dreamcast':'Dreamcast','Xbox':'Xbox','Xbox 360':'Xbox 360','Xbox One':'Xbox One','Xbox Series S/X':'Xbox Series','PC':'PC','iOS':'Mobile','Android':'Mobile'};
+const mp=a=>[...new Set((a||[]).map(x=>PM[x.platform.name]).filter(Boolean))];
+async function rawg(path,p){const k=cfg().rawg;if(!k)throw new Error('nokey');const u=new URL('https://api.rawg.io/api/'+path);u.searchParams.set('key',k);Object.entries(p||{}).forEach(([a,b])=>u.searchParams.set(a,b));const r=await fetch(u);if(!r.ok)throw new Error('rawg '+r.status);return r.json()}
+const gh=(path,o)=>fetch('https://api.github.com'+path,{...o,headers:{Authorization:'Bearer '+cfg().token,Accept:'application/vnd.github+json','Content-Type':'application/json'}});
+async function push(){const c=cfg();if(!c.token)return;const body={files:{'game-tracker.json':{content:JSON.stringify({games:S.games,sug:S.sug||[]})}}};
+ if(c.gist)await gh('/gists/'+c.gist,{method:'PATCH',body:JSON.stringify(body)});else{const j=await (await gh('/gists',{method:'POST',body:JSON.stringify({description:'game-tracker',public:false,...body})})).json();if(j.id)setCfg({gist:j.id})}}
+async function pull(){const c=cfg();if(!c.token)return false;let id=c.gist;
+ if(!id){const l=await (await gh('/gists?per_page=100')).json();const f=Array.isArray(l)&&l.find(x=>x.files&&x.files['game-tracker.json']);if(!f)return false;id=f.id;setCfg({gist:id})}
+ const j=await (await gh('/gists/'+id)).json(),f=j.files&&j.files['game-tracker.json'];if(!f)return false;
+ const d=JSON.parse(f.truncated?await (await fetch(f.raw_url)).text():f.content);S.games=d.games||[];S.sug=d.sug||[];locSave();return true}
+function locSave(){try{localStorage.setItem('gt',JSON.stringify(S.games));localStorage.setItem('gt_sug',JSON.stringify(S.sug||[]))}catch(e){}}
+function save(){clearTimeout(tm);tm=setTimeout(()=>{locSave();push().catch(()=>{})},600)}
+async function saveTok(){setCfg({token:ct.value.trim(),gist:''});mode=cfg().token?'cloud':'local';try{const ok=await pull();if(!ok)await push();alert(ok?'Dados carregados do teu gist.':'Sincroniza\u00e7\u00e3o criada.')}catch(e){alert('Erro a sincronizar. Verifica o token (permiss\u00e3o gist).')}render()}
+function exp(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({games:S.games,sug:S.sug||[]})],{type:'application/json'}));a.download='jogos.json';a.click()}
+function impF(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);S.games=d.games||[];S.sug=d.sug||[];save();render();alert('Importado.')}catch(e){alert('Ficheiro inv\u00e1lido.')}};r.readAsText(f)}
+function cfgHTML(){const c=cfg();return `<h1>\u2699\ufe0f Defini\u00e7\u00f5es</h1><div class="box"><b>Chave RAWG</b> <span class="mu">(gr\u00e1tis em rawg.io/apidocs; fica s\u00f3 neste dispositivo)</span><div class="row"><input type="text" id="ck" value="${E(c.rawg||'')}" placeholder="a tua chave RAWG"><button class="b" onclick="setCfg({rawg:ck.value.trim()});S.news=null;alert('Guardado')">Guardar</button></div></div>
+<div class="box" style="margin-top:12px"><b>Sincronizar telem\u00f3vel/PC</b> <span class="mu">(opcional) Token do GitHub com permiss\u00e3o "gist" (github.com/settings/tokens). Os dados ficam num gist privado teu. Usa o mesmo token em cada dispositivo.</span><div class="row"><input type="text" id="ct" value="${E(c.token||'')}" placeholder="ghp_..."><button class="b" onclick="saveTok()">Guardar e sincronizar</button></div></div>
+<div class="box" style="margin-top:12px"><b>C\u00f3pia de seguran\u00e7a</b><div class="row"><button class="g" onclick="exp()">Exportar JSON</button><button class="g" onclick="document.getElementById('imp').click()">Importar JSON</button><input type="file" id="imp" accept=".json" style="display:none" onchange="impF(this.files[0])"></div></div>`}
+function render(){const y=scrollY,k=S.open+S.dlc;app.innerHTML=S.open?detail():home();if(render.k===k)scrollTo(0,y);else scrollTo(0,0);render.k=k}
+function home(){if(S.view==='inicio'&&!S.news&&cfg().rawg){S.news='load';loadNews()}
+ const t=(v,l)=>`<button class="tab ${(S.view||'inicio')===v?'on':''}" onclick="S.view='${v}';render()">${l}</button>`;
+ return `<div class="tabs" style="margin-bottom:8px">${t('inicio','🏠 Início')}${t('lib','📚 Biblioteca')}${t('cfg','⚙️')}</div>`+(S.view==='lib'?lib():S.view==='cfg'?cfgHTML():inicio())}
+function lib(){
+ const gs=S.games.filter(g=>g.list===S.tab&&(!S.plat||g.platform===S.plat));
+ return `<h1>🎮 Os meus jogos</h1><div class="mu">${mode==='cloud'?'☁ Sincronizado via GitHub Gist':'Guardado só neste dispositivo'}</div>
+ <div class="tabs" style="margin-top:8px">${Object.entries(LS).map(([k,v])=>`<button class="tab ${S.tab===k?'on':''}" onclick="S.tab='${k}';render()">${v} (${S.games.filter(g=>g.list===k).length})</button>`).join('')}</div>
+ <div class="row"><input type="text" id="nt" placeholder="Nome do jogo..." value="${E(S.q||'')}" onkeydown="if(event.key==='Enter')srch()"><select id="np">${PL.map(p=>`<option ${p===(S.pp||S.plat||'PS5')?'selected':''}>${p}</option>`).join('')}</select><button class="b" onclick="srch()">Procurar</button></div>${resHTML()}
+ <div class="row"><span class="mu">Filtrar:</span><select onchange="S.plat=this.value;render()"><option value="">Todas as plataformas</option>${PL.map(p=>`<option ${S.plat===p?'selected':''}>${p}</option>`).join('')}</select></div>
+ <div class="grid">${gs.map(g=>`<div class="card" onclick="S.open='${g.id}';S.dlc=null;render()"><div class="cv">${g.cover?`<img src="${E(g.cover)}" alt="">`:E(g.title)}${g.rating!==''&&g.rating!=null?`<span class="badge">★ ${E(g.rating)}</span>`:''}</div><div class="ct">${E(g.title)}</div><div class="cs">${E(g.platform)}</div></div>`).join('')||'<p class="mu">Nada aqui ainda.</p>'}</div>`}
+function add(){const t=nt.value.trim();if(!t)return;S.res=null;S.q='';S.games.unshift({id:U(),title:t,platform:np.value,list:S.tab,cover:'',rating:'',dlcs:[],notes:''});save();render();const ng=S.games[0];getD(ng).then(()=>{save();if(!S.open)render()}).catch(()=>{})}
+function resHTML(){if(!S.res)return '';if(S.res==='load')return '<div class="box mu">A procurar...</div>';
+ if(S.res==='nokey')return '<div class="box">Falta a chave RAWG. <button class="g" onclick="S.view=\'cfg\';S.res=null;render()">Abrir defini\u00e7\u00f5es</button></div>';
+ return '<div class="box">'+(S.res.length?'':'<div class="mu">Nada encontrado.</div>')+S.res.map((r,i)=>`<div class="tr" style="cursor:pointer" onclick="pick(${i})">${r.background_image?`<img src="${E(r.background_image)}" style="width:44px;height:58px;object-fit:cover;border-radius:6px;flex:none" alt="">`:'<div style="width:44px;height:58px;flex:none"></div>'}<span class="n"><b>${E(r.name)}</b> <span class="mu">${E((r.released||'').slice(0,4))} \u00b7 ${E(mp(r.platforms).join(', '))}</span></span><span>+</span></div>`).join('')+`<div class="row"><button class="g" onclick="add()">Adicionar "${E(S.q)}" tal como escrevi</button><button class="g" onclick="S.res=null;render()">Cancelar</button></div></div>`}
+async function srch(){const q=nt.value.trim();if(!q)return;S.q=q;S.pp=np.value;S.res='load';render();
+ try{S.res=(await rawg('games',{search:q,page_size:8})).results}catch(e){S.res=e.message==='nokey'?'nokey':[]}render()}
+function fromRaw(r,list,plat){const pl=mp(r.platforms);return {id:U(),rid:r.id,title:r.name,year:(r.released||'').slice(0,4),platform:pl.includes(plat)?plat:(pl[0]||plat||'PC'),list,cover:r.background_image||'',mcs:r.metacritic||'',genres:(r.genres||[]).map(x=>x.id),rating:'',dlcs:[],notes:''}}
+function enrich(g,dlcs){rawg('games/'+g.rid).then(d=>{g.lmc=d.metacritic_url||'';g.mcs=d.metacritic||g.mcs;save();if(!S.open)render()}).catch(()=>{});if(dlcs)getD(g).then(()=>{save();if(!S.open)render()}).catch(()=>{})}
+function pick(i){const g=fromRaw(S.res[i],S.tab,np.value);S.games.unshift(g);S.res=null;S.q='';save();render();enrich(g,true)}
+function yt(s){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(s)}
+function strip(l){return l.length?`<div class="hs">${l.map(g=>`<div class="card" onclick="S.open='${g.id}';S.dlc=null;render()"><div class="cv">${g.cover?`<img src="${E(g.cover)}" alt="">`:E(g.title)}${g.rating!==''&&g.rating!=null?`<span class="badge">★ ${E(g.rating)}</span>`:''}</div><div class="ct">${E(g.title)}</div></div>`).join('')}</div>`:'<div class="mu">Nada aqui ainda.</div>'}
+function rc(r,i,k){return `<div class="card"><div class="cv">${r.background_image?`<img src="${E(r.background_image)}" alt="">`:E(r.name)}</div><div class="ct">${E(r.name)}</div><div class="cs">${E(r.released||'')}</div><div class="row" style="margin:4px 0"><button class="g" style="padding:3px 8px" onclick="addRaw('${k}',${i})">+ \u2661</button><a class="l" style="padding:3px 8px" target="_blank" rel="noopener" href="${E(yt(r.name+' official trailer'))}">\U0001f3ac</a></div></div>`}
+function rl(k){const n=S.news;if(n==='load'||(!n&&cfg().rawg))return '<div class="mu">A carregar...</div>';if(!cfg().rawg)return '<div class="mu">P\u00f5e a chave RAWG nas defini\u00e7\u00f5es.</div>';if(!n[k])return '<div class="mu">Indispon\u00edvel agora.</div>';return `<div class="hs">${n[k].map((r,i)=>rc(r,i,k)).join('')}</div>`}
+async function loadNews(){try{const d=new Date(),f=x=>x.toISOString().slice(0,10),a=new Date(+d-45*864e5),b=new Date(+d+150*864e5),c=new Date(+d+864e5);
+ const [n,u]=await Promise.all([rawg('games',{dates:f(a)+','+f(d),ordering:'-added',page_size:12}),rawg('games',{dates:f(c)+','+f(b),ordering:'-added',page_size:12})]);S.news={n:n.results,u:u.results}}catch(e){S.news={}}render()}
+function inicio(){
+ const G=S.games,pl=G.filter(g=>g.list==='playing'),done=G.filter(g=>g.list==='played'),rated=G.filter(g=>g.rating!==''&&g.rating!=null&&!isNaN(+g.rating)),
+ avg=rated.length?(rated.reduce((a,g)=>a+ +g.rating,0)/rated.length).toFixed(1):'\u2013',top=[...rated].sort((a,b)=>b.rating-a.rating).slice(0,8),
+ want=G.filter(g=>g.list==='want'),wish=G.filter(g=>g.list==='wish'),nx=G.find(g=>g.id===S.nx);
+ return `<h1>\U0001f3ae In\u00edcio</h1><div class="fl"><div class="box"><b>${G.length}</b><div class="mu">jogos</div></div><div class="box"><b>${done.length}</b><div class="mu">jogados</div></div><div class="box"><b>${avg}</b><div class="mu">nota m\u00e9dia</div></div><div class="box"><b>${want.length+wish.length}</b><div class="mu">por jogar/comprar</div></div></div>
+ <h2>A jogar agora</h2>${strip(pl)}
+ <h2>Acabados de sair</h2>${rl('n')}
+ <h2>Pr\u00f3ximos lan\u00e7amentos</h2>${rl('u')}
+ <h2>Sugest\u00f5es para ti</h2>${(S.sug||[]).length?`<div class="hs">${S.sug.map((r,i)=>rc(r,i,'s')).join('')}</div>`:'<div class="mu">Baseadas nos g\u00e9neros dos jogos que avaliaste com 7 ou mais.</div>'}<div class="row"><button class="b" onclick="sugg()" ${S.sl?'disabled':''}>${S.sl?'A procurar...':'\u2728 Gerar sugest\u00f5es'}</button></div>
+ <h2>Jogar a seguir</h2><div class="box">${nx?strip([nx])+`<a class="l" target="_blank" rel="noopener" href="${E(yt(nx.title+' '+nx.platform+' official trailer'))}">\U0001f3ac Trailer</a>`:''}<div class="row"><button class="g" onclick="pickNext()">\U0001f3b2 Escolher do que quero jogar</button></div></div>
+ <h2>Os teus melhores</h2>${strip(top)}<h2>Wishlist</h2>${strip(wish)}`}
+function pickNext(){const w=S.games.filter(g=>g.list==='want');S.nx=w.length?w[Math.floor(Math.random()*w.length)].id:null;render()}
+async function sugg(){const cnt={};S.games.filter(g=>+g.rating>=7).forEach(g=>(g.genres||[]).forEach(x=>cnt[x]=(cnt[x]||0)+1));const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3);
+ if(!top.length){alert('Adiciona jogos pela pesquisa e d\u00e1 nota 7 ou mais a alguns, para eu saber os teus g\u00e9neros.');return}
+ S.sl=true;render();try{const r=(await rawg('games',{genres:top.join(','),ordering:'-metacritic',metacritic:'80,100',page_size:40})).results,own=new Set(S.games.map(g=>g.rid)),tt=new Set(S.games.map(g=>g.title.toLowerCase()));
+ S.sug=r.filter(x=>!own.has(x.id)&&!tt.has(x.name.toLowerCase())).sort(()=>Math.random()-.5).slice(0,8).map(x=>({id:x.id,name:x.name,released:x.released,background_image:x.background_image,platforms:x.platforms,genres:x.genres,metacritic:x.metacritic}))}catch(e){alert(e.message==='nokey'?'Falta a chave RAWG.':'N\u00e3o consegui gerar sugest\u00f5es.')}S.sl=false;save();render()}
+function addRaw(k,i){const r=k==='s'?S.sug[i]:S.news[k][i],used=S.games.map(g=>g.platform),pl=mp(r.platforms),g=fromRaw(r,'wish',pl.find(x=>used.includes(x)));S.games.unshift(g);if(k==='s')S.sug.splice(i,1);save();render();enrich(g,false)}
+function setF(k,v){const e=cur();e[k]=v;save();if(k==='title'||k==='platform'||k==='list')render()}
+function stats(e){const t=e.trophies||[],d=t.filter(x=>x.done).length,on=t.filter(x=>x.online).length;
+ const c=Object.keys(TY).map(k=>[k,t.filter(x=>x.type===k).length]).filter(x=>x[1]).map(x=>`${TY[x[0]].split(' ')[0]} ${x[1]}`).join(' · ');
+ return {t:t.length,d,on,c}}
+function links(e,g,dlc){const t=dlc?g.title+' '+e.title:e.title,p=g.platform,tp=TP.includes(p),ps=/^(PS[345]|Vita)$/.test(p),Q=encodeURIComponent,G=x=>'https://www.google.com/search?q='+Q(x);
+ const L=[['⏱ Quanto tempo demora (HLTB)',e.hltb||'https://howlongtobeat.com/?q='+Q(t)],
+ ['Ⓜ Metacritic',e.lmc||'https://www.metacritic.com/search/'+Q(t)+'/'],
+ ['▶ Walkthrough completo',e.lwt||'https://www.youtube.com/results?search_query='+Q(t+' '+p+' full walkthrough')],
+ ['🗺 Mapa interativo',e.map||G(t+' interactive map')],['🎬 Trailer',e.ltl||'https://www.youtube.com/results?search_query='+Q(t+' '+(dlc?'':p+' ')+'official trailer')]];
+ if(tp)L.splice(2,0,[ps?'🏆 Lista de troféus':'🏆 Conquistas',e.ltr||G(t+(ps?' trophy list psnprofiles':' achievements list'))]);
+ return L.map(x=>`<a class="l" target="_blank" rel="noopener" href="${E(x[1])}">${x[0]}</a>`).join('')}
+function detail(){
+ const g=game(),e=cur(),dlc=!!S.dlc;
+ return `<div class="row"><button class="g" onclick="${dlc?`S.dlc=null`:`S.open=null`};render()">← ${dlc?E(g.title):'Voltar'}</button>${dlc?'<button class="g" onclick="delD()">Apagar DLC</button>':`<button class="g" onclick="del()">Apagar jogo</button>`}</div>
+ <div class="top">${dlc?'':`<div class="cv" onclick="cover()" title="Mudar capa">${g.cover?`<img src="${E(g.cover)}" alt="">`:'Toca para pôr a capa'}</div>`}
+ <div style="flex:1;min-width:200px"><input type="text" style="width:100%;font-size:18px;font-weight:700" value="${E(e.title)}" onchange="setF('title',this.value)">
+ ${dlc?`<div class="mu" style="margin-top:6px">DLC de ${E(g.title)}</div>`:`<div class="row"><select onchange="setF('platform',this.value)">${PL.map(p=>`<option ${g.platform===p?'selected':''}>${p}</option>`).join('')}</select><select onchange="setF('list',this.value)">${Object.entries(LS).map(([k,v])=>`<option value="${k}" ${g.list===k?'selected':''}>${v}</option>`).join('')}</select></div>`}
+ ${g.mcs&&!dlc?`<div class="mu">Metacritic: <b>${E(g.mcs)}</b>${g.year?' · '+E(g.year):''}</div>`:''}<label class="mu">A minha nota (0–10)<br><input type="number" min="0" max="10" step="0.5" style="width:90px" value="${E(e.rating)}" onchange="setF('rating',this.value)"></label>
+ <textarea style="width:100%;margin-top:8px" rows="3" placeholder="A minha review..." onchange="setF('review',this.value)">${E(e.review)}</textarea></div></div>
+ <h2>Links</h2><div class="box"><div class="row" style="margin-top:0">${links(e,g,dlc)}</div>
+ <details><summary class="mu">Substituir por links diretos</summary><div class="row">
+ <input type="text" placeholder="HowLongToBeat" value="${E(e.hltb)}" onchange="setF('hltb',this.value)"><input type="text" placeholder="Metacritic" value="${E(e.lmc)}" onchange="setF('lmc',this.value)">
+ <input type="text" placeholder="Walkthrough" value="${E(e.lwt)}" onchange="setF('lwt',this.value)"><input type="text" placeholder="Troféus/Conquistas" value="${E(e.ltr)}" onchange="setF('ltr',this.value)"><input type="text" placeholder="Mapa" value="${E(e.map)}" onchange="setF('map',this.value)"></div></details></div>
+ <h2>Notas</h2><textarea style="width:100%" rows="3" onchange="setF('notes',this.value)">${E(e.notes)}</textarea>
+ ${dlc?'':`<h2>DLCs</h2><div class="box">${g.dlcs.map(d=>`<div class="tr" style="cursor:pointer" onclick="S.dlc='${d.id}';render()"><span class="n">${E(d.title)}</span><span class="mu">${d.rating!==''&&d.rating!=null?'★ '+E(d.rating):''}</span><span>›</span></div>`).join('')||'<div class="mu">Sem DLCs.</div>'}
+ <div class="row"><input type="text" id="dn" placeholder="Nome da DLC"><button class="b" onclick="addD()">Adicionar DLC</button><button class="g" id="fd" onclick="findD()">✨ Procurar DLCs</button></div></div>`}`}
+function addD(){const n=dn.value.trim();if(!n)return;game().dlcs.push({id:U(),title:n,rating:'',notes:''});save();render()}
+async function getD(g){if(!g.rid){const d=await rawg('games',{search:g.title,page_size:1});if(!d.results[0])return 0;g.rid=d.results[0].id}
+ const d=await rawg('games/'+g.rid+'/additions',{page_size:40}),bad=/\b(skins?|cosmetics?|soundtrack|art ?book|costumes?|outfits?|bundle|deluxe|digital extras?|season pass|upgrade|edition)\b/i;let n=0;
+ (d.results||[]).forEach(x=>{if(bad.test(x.name)||g.dlcs.some(y=>y.title.toLowerCase()===x.name.toLowerCase()))return;g.dlcs.push({id:U(),title:x.name,rating:'',notes:''});n++});return n}
+async function findD(){const b=document.getElementById('fd'),o=S.open;b.disabled=true;b.textContent='A procurar...';try{const n=await getD(game());save();if(S.open===o&&!S.dlc)render();if(!n)alert('N\u00e3o encontrei DLCs novas.')}catch(x){b.disabled=false;b.textContent='\u2728 Procurar DLCs';alert(x.message==='nokey'?'Falta a chave RAWG.':'N\u00e3o consegui procurar agora.')}}
+function delD(){if(confirm('Apagar esta DLC?')){const g=game();g.dlcs=g.dlcs.filter(d=>d.id!==S.dlc);S.dlc=null;save();render()}}
+function del(){if(confirm('Apagar este jogo?')){S.games=S.games.filter(g=>g.id!==S.open);S.open=null;save();render()}}
+function cover(){const u=prompt('Link da imagem da capa:',game().cover||'');if(u!==null){game().cover=u.trim();save();render()}}
+(()=>{try{S.games=JSON.parse(localStorage.getItem('gt')||'[]');S.sug=JSON.parse(localStorage.getItem('gt_sug')||'[]')}catch(e){}
+ if(cfg().token)mode='cloud';render();if(cfg().token)pull().then(ok=>{if(ok)render()}).catch(()=>{})})();
+</script></body></html>
