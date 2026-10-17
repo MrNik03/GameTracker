@@ -108,10 +108,10 @@ function tagsOf(r){const a=(r.genres||[]).map(x=>GN[x.name]||x.name),b=(r.tags||
 const RP={'PS5':187,'PS4':18,'PS3':16,'PS2':15,'PS1':27,'PSP':17,'Vita':19,'Switch':7,'NES':49,'SNES':79,'N64':83,'GameCube':105,'Wii':11,'Wii U':10,'Game Boy':26,'GBC':43,'GBA':24,'DS':9,'3DS':8,'Master System':74,'Mega Drive':167,'Saturn':107,'Dreamcast':106,'Xbox':80,'Xbox 360':14,'Xbox One':1,'Xbox Series':186,'PC':4,'Mobile':21};
 const RG=[['action','Ação'],['role-playing-games-rpg','RPG'],['shooter','Shooter'],['adventure','Aventura'],['strategy','Estratégia'],['indie','Indie'],['platformer','Plataformas'],['puzzle','Puzzle'],['racing','Corrida'],['sports','Desporto'],['fighting','Luta'],['simulation','Simulação'],['arcade','Arcade'],['massively-multiplayer','MMO'],['casual','Casual'],['family','Família']];
 const RT=[['fps','FPS'],['open-world','Open World'],['souls-like','Souls-like'],['co-op','Co-op'],['horror','Horror'],['survival','Survival'],['metroidvania','Metroidvania'],['roguelike','Roguelike'],['jrpg','JRPG']];
-const RO=[['-added','Mais populares'],['-metacritic','Melhor Metacritic'],['-released','Mais recentes'],['-rating','Melhor avaliados'],['name','A–Z']];
+const RO=[['','Relevância'],['-added','Mais populares'],['-metacritic','Melhor Metacritic'],['-released','Mais recentes'],['-rating','Melhor avaliados'],['name','A–Z']];
 const PP=[['2','PlayStation'],['3','Xbox'],['1','PC'],['7','Nintendo'],['4','iOS'],['8','Android'],['5','macOS'],['6','Linux'],['11','SEGA']];
 function go(v,o){S.open=null;S.dlc=null;S.lb=null;S.view=v;Object.assign(S,o||{});render()}
-function goS(f){S.sf=Object.assign({ord:'-added',page:0},f);S.sr=[];S.open=null;S.dlc=null;S.view='search';render();runS(false)}
+function goS(f){S.sf=Object.assign({ord:f.q?'':'-added',page:0},f);S.sr=[];S.open=null;S.dlc=null;S.view='search';render();runS(false)}
 function topS(v){v=v.trim();if(!v)return;goS({q:v})}
 function openRaw(k,i){const r=k==='s'?S.sug[i]:k==='x'?X[S.open].series[i]:k==='r'?S.sr[i]:S.fd.items[i],ex=S.games.find(g=>g.rid===r.id);S.dlc=null;S.lb=null;
  if(ex)S.open=ex.id;else{const pl=mp(r.platforms),g=fromRaw(r,'',[pl[0]||'PC']);g.id='p'+r.id;g.preview=true;g.raw=r;S.prev=g;S.open=g.id}render()}
@@ -130,21 +130,21 @@ function shell(main){const v=S.view||'inicio',o=!!S.open,c=k=>S.games.filter(g=>
  <h4>Plataformas</h4>${PP.map(([i,l])=>L(false,`goS({pp:'${i}'})`,l)).join('')}
  <h4>Géneros</h4>${RG.map(([k,l])=>L(false,`goS({genre:'${k}'})`,l)).join('')}
  <h4>Mais</h4>${L(!o&&v==='cfg',"go('cfg')",'⚙️ Definições')}</aside>
- <main>${addPanel()}${main}<div class="mu" style="margin:28px 0 80px;text-align:center">Dados: <a href="https://rawg.io" target="_blank" rel="noopener" style="color:inherit">RAWG</a> · Versão 1.11</div></main></div>`
+ <main>${addPanel()}${main}<div class="mu" style="margin:28px 0 80px;text-align:center">Dados: <a href="https://rawg.io" target="_blank" rel="noopener" style="color:inherit">RAWG</a> · Versão 1.12</div></main></div>`
  +(S.adding||v==='cfg'&&!o?'':`<button class="fab" title="Adicionar jogo" onclick="openAdd()">+</button>`)}
 function home(){const v=S.view||'inicio';if(v==='inicio'&&cfg().rawg){const key=fkey();if(!S.fd||S.fd.key!==key){S.fd={key,load:true};loadFeed(key)}}
  return shell(v==='lib'?lib():v==='cfg'?cfgHTML():v==='search'?searchView():inicio())}
 function gcard(r,i,own){return `<div class="card" onclick="openRaw('r',${i})"><div class="cv">${r.background_image?cimg(r.background_image):E(r.name)}${own.has(r.id)?'<span class="badge">✓</span>':''}</div><div class="cs" style="padding-top:8px">${E(mp(r.platforms).slice(0,4).join(' · '))}</div><div class="ct" style="padding-top:2px">${E(r.name)}</div><div class="cs">${E((r.released||'').slice(0,4))}${r.metacritic?' · Metacritic '+r.metacritic:''}</div></div>`}
-function searchView(){const f=S.sf=S.sf||{ord:'-added'},own=new Set(S.games.map(g=>g.rid)),
+function searchView(){const f=S.sf=S.sf||{ord:''},own=new Set(S.games.map(g=>g.rid)),
  opt=(a,v,all)=>`<option value="">${all}</option>`+a.map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('');
  return `<h1 style="font-size:clamp(28px,5vw,48px);margin:10px 0">Pesquisa</h1><div class="row"><input type="text" id="sq" style="flex:1" placeholder="Nome (opcional)" value="${E(f.q||'')}" onkeydown="if(event.key==='Enter')runS(true)"></div>
  <div class="row"><select id="spp">${opt(PP,f.pp,'Todas as famílias')}</select><select id="sp">${opt(Object.keys(RP).map(k=>[k,k]),f.plat,'Todas as plataformas')}</select><select id="sg">${opt(RG,f.genre,'Todos os géneros')}</select><select id="st">${opt(RT,f.tag,'Todos os tipos')}</select><select id="so">${RO.map(([k,l])=>`<option value="${k}" ${f.ord===k?'selected':''}>${l}</option>`).join('')}</select><button class="b" onclick="runS(true)">Pesquisar</button><label class="mu"><input type="checkbox" ${S.hideD?'checked':''} onchange="S.hideD=this.checked"> esconder DLCs</label></div>
  ${S.sbusy&&!(S.sr||[]).length?'<p class="mu">A procurar...</p>':S.sr?`<div class="grid">${S.sr.map((r,i)=>gcard(r,i,own)).join('')}</div>${S.sm?`<div class="row"><button class="g" onclick="runS(false)" ${S.sbusy?'disabled':''}>Ver mais</button></div>`:''}${S.sr.length?'':'<p class="mu">Nada encontrado.</p>'}`:'<p class="mu">Escolhe uma plataforma, um género ou um tipo (ou escreve um nome) e carrega em Pesquisar.</p>'}`}
 async function runS(fresh){const f=S.sf=S.sf||{};if(fresh){f.q=sq.value.trim();f.pp=spp.value;f.plat=sp.value;f.genre=sg.value;f.tag=st.value;f.ord=so.value;f.page=0;S.sr=[]}
  f.page=(f.page||0)+1;S.sbusy=true;render();
- try{const p={page_size:24,page:f.page,ordering:f.ord||'-added'};if(S.hideD)p.exclude_additions='true';if(f.q)p.search=f.q;if(f.plat)p.platforms=RP[f.plat];if(f.pp)p.parent_platforms=f.pp;if(f.genre)p.genres=f.genre;if(f.tag)p.tags=f.tag;
+ try{const p={page_size:24,page:f.page};if(f.ord)p.ordering=f.ord;else if(!f.q)p.ordering='-added';if(S.hideD)p.exclude_additions='true';if(f.q)p.search=f.q;if(f.plat)p.platforms=RP[f.plat];if(f.pp)p.parent_platforms=f.pp;if(f.genre)p.genres=f.genre;if(f.tag)p.tags=f.tag;
   if(f.ord==='-metacritic')p.metacritic='1,100';if(f.ord==='-released')p.dates='1970-01-01,'+new Date().toISOString().slice(0,10);
-  const d=await rawg('games',p);S.sr=[...(S.sr||[]),...d.results.filter(r=>!junk.test(r.name))];S.sm=!!d.next}catch(e){S.sm=false;alert(e.message==='nokey'?'Falta a chave RAWG.':'Não consegui pesquisar agora.')}S.sbusy=false;render()}
+  const d=await rawg('games',p);S.sr=[...(S.sr||[]),...d.results.filter(r=>!junk.test(r.name))];if(f.q)S.sr=rank(S.sr,f.q).l;S.sm=!!d.next}catch(e){S.sm=false;alert(emsg(e))}S.sbusy=false;render()}
 function pickS(i){const r=S.sr[i],pl=mp(r.platforms),f=S.sf||{};S.adding=true;S.pend={r,plats:f.plat&&pl.includes(f.plat)?[f.plat]:(pl.length===1?[pl[0]]:[]),list:defList()};render();scrollTo(0,0)}
 function lib(){
  const own=g=>g.list!=='wish',inTab=g=>S.tab==='all'?own(g):g.list===S.tab,
@@ -167,12 +167,20 @@ function addPanel(){if(!S.adding)return '';const pd=S.pend;
  return `<div class="box" style="margin-bottom:12px"><div class="row" style="margin-top:0"><input type="text" id="nt" placeholder="Nome do jogo..." value="${E(S.q||'')}" onkeydown="if(event.key==='Enter')srch()"><button class="b" onclick="srch()">Procurar</button><button class="g" onclick="closeAdd()">\u2715</button></div><label class="mu"><input type="checkbox" ${S.hideD?'checked':''} onchange="S.hideD=this.checked;if(nt.value.trim())srch()"> esconder DLCs</label>${resHTML()}</div>`}
 function resHTML(){if(!S.res)return '';if(S.res==='load')return '<div class="mu">A procurar...</div>';
  if(S.res==='nokey')return '<div>Falta a chave RAWG. <button class="g" onclick="closeAdd();S.view=\'cfg\';render()">Abrir definições</button></div>';
- return '<div style="max-height:60vh;overflow:auto">'+(S.res.length?'':'<div class="mu">Nada encontrado.</div>')+S.res.map((r,i)=>`<div class="tr" style="cursor:pointer" onclick="pick(${i})">${r.background_image?`<img src="${E(r.background_image)}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex:none" alt="">`:'<div style="width:80px;height:45px;flex:none"></div>'}<span class="n"><b>${E(r.name)}</b> <span class="mu">${E((r.released||'').slice(0,4))} · ${E(mp(r.platforms).join(', '))}</span></span><span>+</span></div>`).join('')+(S.rn?`<div class="row"><button class="g" onclick="moreQ()">Ver mais</button></div>`:'')+'</div>'+`<div class="row"><button class="g" onclick="addTyped()">Adicionar "${E(S.q)}" tal como escrevi</button></div>`}
+ return '<div style="max-height:60vh;overflow:auto">'+(S.res.length?'':'<div class="mu">'+E(S.err||'Nada encontrado.')+'</div>')+S.res.map((r,i)=>`<div class="tr" style="cursor:pointer" onclick="pick(${i})">${r.background_image?`<img src="${E(r.background_image)}" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex:none" alt="">`:'<div style="width:80px;height:45px;flex:none"></div>'}<span class="n"><b>${E(r.name)}</b> <span class="mu">${E((r.released||'').slice(0,4))} · ${E(mp(r.platforms).join(', '))}</span></span><span>+</span></div>`).join('')+(S.rn?`<div class="row"><button class="g" onclick="moreQ()">Ver mais</button></div>`:'')+'</div>'+`<div class="row"><button class="g" onclick="addTyped()">Adicionar "${E(S.q)}" tal como escrevi</button></div>`}
 const junk=/\b(skins?|cosmetics?|soundtrack|art ?book|costumes?|outfits?|season pass|digital extras?)\b/i;
-async function qsearch(q,page){const b={search:q,page_size:20,page,search_precise:'true'};if(S.hideD)b.exclude_additions='true';let d=await rawg('games',b);if((d.results||[]).length<3&&page===1){delete b.search_precise;d=await rawg('games',b)}d.results=(d.results||[]).filter(r=>!junk.test(r.name));return d}
-async function srch(){const q=nt.value.trim();if(!q)return;S.q=q;S.res='load';S.qp=1;render();
- try{const d=await qsearch(q,1);S.res=d.results;S.rn=!!d.next}catch(e){S.res=e.message==='nokey'?'nokey':[];S.rn=false}render()}
-async function moreQ(){S.qp++;try{const d=await qsearch(S.q,S.qp);S.res=[...S.res,...d.results];S.rn=!!d.next}catch(e){S.rn=false}render()}
+const norm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+function rank(list,q){const t=norm(q).split(' ').filter(Boolean);if(!t.length)return {l:list,hits:list.length};const nq=t.join(' '),jq=t.join('');
+ const sc=r=>{const n=norm(r.name),w=n.split(' '),nc=n.replace(/ /g,'');if(!(t.every(x=>w.some(y=>y.startsWith(x)))||nc.includes(jq)))return 0;let s=1;if(n===nq)s+=6;else if(n.includes(nq)||nc.includes(jq))s+=2;return s};
+ const a=list.map((r,i)=>[r,sc(r),i]),h=a.filter(x=>x[1]>0),use=h.length?h:a;return {l:use.sort((x,y)=>y[1]-x[1]||(+y[0].added||0)-(+x[0].added||0)||x[2]-y[2]).map(x=>x[0]),hits:h.length}}
+const emsg=e=>e.message==='nokey'?'Falta a chave RAWG (⚙️).':/rawg 40[13]/.test(e.message)?'Chave RAWG inválida ou sem permissão.':/rawg 429/.test(e.message)?'Limite de pedidos do RAWG atingido. Tenta mais tarde.':/Failed to fetch|NetworkError|Load failed/i.test(e.message)?'Não consegui ligar ao RAWG (rede ou bloqueador de anúncios).':'Erro do RAWG: '+e.message;
+async function qsearch(q,page){const b={search:q,page_size:40,page};if(S.hideD)b.exclude_additions='true';
+ let d=await rawg('games',{...b,search_precise:'true'}),r=rank((d.results||[]).filter(x=>!junk.test(x.name)),q);
+ if(page===1&&r.hits<3){const d2=await rawg('games',b),seen=new Set(),u=[...(d.results||[]),...(d2.results||[])].filter(x=>!seen.has(x.id)&&seen.add(x.id));d=d2;r=rank(u.filter(x=>!junk.test(x.name)),q)}
+ return {results:r.l,next:d.next}}
+async function srch(){const q=nt.value.trim();if(!q)return;S.q=q;S.res='load';S.qp=1;S.err='';render();
+ try{const d=await qsearch(q,1);S.res=d.results;S.rn=!!d.next}catch(e){S.res=e.message==='nokey'?'nokey':[];S.rn=false;S.err=emsg(e)}render()}
+async function moreQ(){S.qp++;try{const d=await qsearch(S.q,S.qp);S.res=rank([...S.res,...d.results],S.q).l;S.rn=!!d.next}catch(e){S.rn=false;alert(emsg(e))}render()}
 const defList=()=>S.tab==='all'?'want':S.tab;
 function pick(i){const r=S.res[i],pl=mp(r.platforms);S.pend={r,plats:pl.length===1?[pl[0]]:[],list:defList()};render()}
 function addTyped(){S.pend={r:{name:S.q,platforms:[]},plats:[],list:defList()};render()}
@@ -210,7 +218,7 @@ function inicio(){
  ${f==='cal'?`<input type="month" value="${E(S.cm||new Date().toISOString().slice(0,7))}" onchange="S.cm=this.value;render()">`:''}
  <select onchange="S.fo=this.value;render()">${op([['-added','Ordem: relevância'],['-released','Mais recentes primeiro'],['released','Mais antigos primeiro'],['-metacritic','Metacritic'],['name','Nome']],fo)}</select><span style="flex:1"></span>
  <button class="g" onclick="S.disp=S.disp==='l'?'g':'l';render()">${S.disp==='l'?'▦ Grelha':'☰ Lista'}</button></div>
- ${!cfg().rawg?'<p class="mu">Põe a chave RAWG nas definições (⚙️).</p>':!fd||fd.load?'<p class="mu">A carregar...</p>':fd.items.length?`<div class="grid ${S.disp==='l'?'l':''}">${fd.items.map((r,i)=>rc(r,i,'f')).join('')}</div>`:'<p class="mu">Nada encontrado.</p>'}
+ ${!cfg().rawg?'<p class="mu">Põe a chave RAWG nas definições (⚙️).</p>':!fd||fd.load?'<p class="mu">A carregar...</p>':fd.items.length?`<div class="grid ${S.disp==='l'?'l':''}">${fd.items.map((r,i)=>rc(r,i,'f')).join('')}</div>`:`<p class="mu">${fd.err?E(emsg({message:fd.err})):'Nada encontrado.'}</p>`}
  <h2>A jogar agora</h2>${strip(pl)}
  <div class="fl" style="margin-top:18px"><div class="box"><b>${G.length}</b><div class="mu">jogos</div></div><div class="box"><b>${done.length}</b><div class="mu">jogados</div></div><div class="box"><b>${avg}</b><div class="mu">nota média</div></div><div class="box"><b>${want.length}</b><div class="mu">por jogar</div></div><div class="box"><b>${wish.length}</b><div class="mu">wishlist</div></div></div>
  <h2>Sugestões para ti</h2>${(S.sug||[]).length?`<div class="hs">${S.sug.map((r,i)=>rc(r,i,'s')).join('')}</div>`:'<div class="mu">Baseadas nos géneros dos jogos que avaliaste com 7 ou mais.</div>'}<div class="row"><button class="b" onclick="sugg()" ${S.sl?'disabled':''}>${S.sl?'A procurar...':'✨ Gerar sugestões'}</button></div>
