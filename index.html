@@ -87,7 +87,7 @@ const RO=[['-added','Mais populares'],['-metacritic','Melhor Metacritic'],['-rel
 function home(){if(S.view==='inicio'&&!S.news&&cfg().rawg){S.news='load';loadNews()}
  const t=(v,l)=>`<button class="tab ${(S.view||'inicio')===v?'on':''}" onclick="S.view='${v}';render()">${l}</button>`;
  return `<div class="tabs" style="margin-bottom:8px">${t('inicio','🏠 Início')}${t('lib','📚 Biblioteca')}${t('search','🔎 Pesquisa')}${t('cfg','⚙️')}</div>`+addPanel()+(S.view==='lib'?lib():S.view==='cfg'?cfgHTML():S.view==='search'?searchView():inicio())
- +(S.adding||S.view==='cfg'?'':`<button class="fab" title="Adicionar jogo" onclick="openAdd()">+</button>`)}
+ +(S.adding||S.view==='cfg'?'':`<button class="fab" title="Adicionar jogo" onclick="openAdd()">+</button>`)+`<div class="mu" style="margin:28px 0 80px;text-align:center">Versão 17 out · c</div>`}
 function gcard(r,i,own){return `<div class="card" onclick="pickS(${i})"><div class="cv">${r.background_image?`<img loading="lazy" decoding="async" src="${E(r.background_image)}" alt="">`:E(r.name)}${own.has(r.id)?'<span class="badge">✓</span>':''}</div><div class="ct">${E(r.name)}</div><div class="cs">${E((r.released||'').slice(0,4))} · ${E(mp(r.platforms).slice(0,3).join(', '))}</div></div>`}
 function searchView(){const f=S.sf=S.sf||{ord:'-added'},own=new Set(S.games.map(g=>g.rid)),
  opt=(a,v,all)=>`<option value="">${all}</option>`+a.map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('');
